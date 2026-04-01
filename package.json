@@ -1,0 +1,17 @@
+{
+  "name": "excel-agent",
+  "version": "1.0.0",
+  "description": "Agente para preenchimento automático de planilhas com dados do Google Drive",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "googleapis": "^144.0.0",
+    "cookie": "^0.7.2"
+  },
+  "engines": {
+    "node": "20.x"
+  }
+}

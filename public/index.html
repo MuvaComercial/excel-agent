@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Excel Agent — MUVA House</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --border: #2a2a2a;
+      --accent: #7c5cfc;
+      --accent-hover: #6a4de0;
+      --text: #f0f0f0;
+      --text-muted: #888;
+      --success: #22c55e;
+      --error: #ef4444;
+      --warning: #f59e0b;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* HEADER */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 32px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .logo span { color: var(--accent); }
+
+    .auth-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-info {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* MAIN */
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      margin-bottom: 40px;
+      font-size: 15px;
+    }
+
+    /* STEPS */
+    .step {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .step-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    /* INPUTS */
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    /* BUTTONS */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover { background: var(--accent-hover); }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+    .btn-google {
+      background: #fff;
+      color: #333;
+      gap: 10px;
+    }
+
+    .btn-google:hover { background: #f0f0f0; }
+
+    .btn-danger {
+      background: transparent;
+      border: 1px solid var(--error);
+      color: var(--error);
+      font-size: 13px;
+      padding: 8px 14px;
+    }
+
+    .btn-danger:hover { background: var(--error); color: #fff; }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* FOLDER ROW */
+    .folder-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .folder-row input { flex: 1; }
+
+    /* FILE TABLE */
+    .file-table-wrapper {
+      overflow-x: auto;
+      margin-top: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead tr {
+      background: var(--bg);
+    }
+
+    th {
+      padding: 10px 12px;
+      text-align: left;
+      color: var(--text-muted);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    .file-name {
+      font-family: 'Inter', monospace;
+      font-size: 12px;
+      color: var(--text);
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .file-link {
+      color: var(--accent);
+      font-size: 12px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .file-link:hover { text-decoration: underline; }
+
+    select {
+      padding: 6px 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      min-width: 130px;
+    }
+
+    select:focus { outline: none; border-color: var(--accent); }
+
+    /* BADGES */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-img { background: #1e3a5f; color: #60a5fa; }
+    .badge-pdf { background: #3b1a1a; color: #f87171; }
+    .badge-other { background: #2a2a2a; color: #888; }
+
+    /* APPLY ALL ROW */
+    .apply-all {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: var(--bg);
+      border-radius: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .apply-all label { margin: 0; color: var(--text-muted); font-size: 13px; }
+
+    /* RESULT */
+    .result-box {
+      background: var(--surface);
+      border: 1px solid var(--success);
+      border-radius: 12px;
+      padding: 28px;
+      display: none;
+    }
+
+    .result-box.show { display: block; }
+
+    .result-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--success);
+      margin-bottom: 12px;
+    }
+
+    .result-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      background: var(--success);
+      color: #fff;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 14px;
+      margin-top: 12px;
+    }
+
+    .result-link:hover { background: #16a34a; }
+
+    /* ALERTS */
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-top: 12px;
+      display: none;
+    }
+
+    .alert.show { display: block; }
+    .alert-error { background: #1f0a0a; border: 1px solid var(--error); color: #fca5a5; }
+    .alert-warn { background: #1f1500; border: 1px solid var(--warning); color: #fcd34d; }
+    .alert-info { background: #0f1a2e; border: 1px solid #3b82f6; color: #93c5fd; }
+
+    /* SPINNER */
+    .spinner {
+      display: none;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    .spinner.show { display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* LOCKED OVERLAY */
+    .locked {
+      opacity: 0.4;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    /* AUTH GATE */
+    #auth-gate {
+      text-align: center;
+      padding: 80px 24px;
+      display: none;
+    }
+
+    #auth-gate.show { display: block; }
+
+    #auth-gate h2 { font-size: 22px; margin-bottom: 12px; }
+    #auth-gate p { color: var(--text-muted); margin-bottom: 28px; }
+
+    /* SUMMARY BAR */
+    .summary-bar {
+      display: flex;
+      gap: 16px;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .summary-bar strong { color: var(--text); }
+
+    /* GENERATE SECTION */
+    .generate-section {
+      margin-top: 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .big-btn {
+      padding: 14px 32px;
+      font-size: 16px;
+      border-radius: 10px;
+    }
+
+    /* GOOGLE ICON */
+    .google-icon {
+      width: 18px;
+      height: 18px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <rect x="3" y="3" width="18" height="18" rx="3" fill="#7c5cfc" opacity="0.2"/>
+      <path d="M7 8h10M7 12h7M7 16h5" stroke="#7c5cfc" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    Excel <span>Agent</span>
+  </div>
+  <div class="auth-area" id="auth-area">
+    <button class="btn btn-google" id="btn-login" onclick="login()">
+      <svg class="google-icon" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      Entrar com Google
+    </button>
+    <div id="user-logged" style="display:none; align-items:center; gap:10px;">
+      <span class="user-info" id="user-email"></span>
+      <button class="btn btn-danger" onclick="logout()">Sair</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- AUTH GATE -->
+  <div id="auth-gate">
+    <h2>Bem-vindo ao Excel Agent</h2>
+    <p>Faça login com sua conta Google para começar a criar planilhas automaticamente.</p>
+    <button class="btn btn-google btn-primary" style="font-size:15px; padding:12px 24px;" onclick="login()">
+      <svg class="google-icon" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      Entrar com Google
+    </button>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div id="main-content" style="display:none;">
+    <h1>Nova Planilha de Controle</h1>
+    <p class="subtitle">Preencha automaticamente a planilha de controle com imagens do seu Google Drive.</p>
+
+    <!-- STEP 1: TITLE -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-num">1</div>
+        <div class="step-title">Título da Planilha</div>
+      </div>
+      <label for="sheet-title">Nome do projeto / cliente</label>
+      <input type="text" id="sheet-title" placeholder="Ex: F00120_NomeCliente_Troca_Cor" />
+    </div>
+
+    <!-- STEP 2: DRIVE FOLDER -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-num">2</div>
+        <div class="step-title">Pasta do Google Drive</div>
+      </div>
+      <label for="folder-input">Link ou ID da pasta com as imagens</label>
+      <div class="folder-row">
+        <input type="text" id="folder-input" placeholder="https://drive.google.com/drive/folders/... ou ID direto" />
+        <button class="btn btn-primary" id="btn-fetch" onclick="fetchFiles()">
+          <div class="spinner" id="spinner-fetch"></div>
+          Buscar Arquivos
+        </button>
+      </div>
+      <div class="alert alert-error" id="alert-fetch"></div>
+    </div>
+
+    <!-- STEP 3: FILE LIST -->
+    <div class="step" id="step-files" style="display:none;">
+      <div class="step-header">
+        <div class="step-num">3</div>
+        <div class="step-title">Arquivos Encontrados</div>
+      </div>
+
+      <div class="summary-bar" id="summary-bar"></div>
+
+      <!-- Apply All -->
+      <div class="apply-all">
+        <label>Aplicar para todas as linhas:</label>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <label style="margin:0; white-space:nowrap;">Peça UP</label>
+          <select id="apply-peca-up" onchange="applyAll('pecaUp', this.value)">
+            <option value="">— selecione —</option>
+            <option value="top">top</option>
+            <option value="camiseta">camiseta</option>
+            <option value="camisa">camisa</option>
+            <option value="blusa">blusa</option>
+            <option value="casaco">casaco</option>
+            <option value="Original">Original</option>
+          </select>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <label style="margin:0; white-space:nowrap;">Peça Down</label>
+          <select id="apply-peca-down" onchange="applyAll('pecaDown', this.value)">
+            <option value="">— selecione —</option>
+            <option value="calça">calça</option>
+            <option value="shorts">shorts</option>
+            <option value="saia">saia</option>
+            <option value="bermuda">bermuda</option>
+            <option value="conjunto inferior">conjunto inferior</option>
+            <option value="Original">Original</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="file-table-wrapper">
+        <table id="files-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Codigo Img</th>
+              <th>Link</th>
+              <th>Tipo</th>
+              <th>Peça UP</th>
+              <th>Peça Down</th>
+            </tr>
+          </thead>
+          <tbody id="files-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- GENERATE BUTTON -->
+    <div class="generate-section" id="generate-section" style="display:none;">
+      <button class="btn btn-primary big-btn" id="btn-generate" onclick="generateSheet()">
+        <div class="spinner" id="spinner-gen"></div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M9 17H7A5 5 0 0 1 7 7h2M15 7h2a5 5 0 0 1 0 10h-2M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Gerar Planilha
+      </button>
+      <span style="color: var(--text-muted); font-size: 13px;" id="rows-count"></span>
+    </div>
+
+    <!-- RESULT -->
+    <div class="result-box" id="result-box">
+      <div class="result-title">✅ Planilha criada com sucesso!</div>
+      <p style="color: var(--text-muted); font-size: 14px;" id="result-info"></p>
+      <a href="#" target="_blank" id="result-link" class="result-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Abrir Planilha no Google Sheets
+      </a>
+    </div>
+
+    <div class="alert alert-error" id="alert-gen"></div>
+  </div>
+</main>
+
+<script>
+  let fileData = [];
+
+  // ---- AUTH ----
+  async function checkAuth() {
+    try {
+      const res = await fetch('/api/auth/status');
+      const data = await res.json();
+      if (data.authenticated) {
+        showLoggedIn(data.email);
+      } else {
+        showLoggedOut();
+      }
+    } catch {
+      showLoggedOut();
+    }
+
+    // Check URL params
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('auth') === 'error') {
+      showAlert('alert-fetch', 'Erro ao autenticar com Google. Tente novamente.');
+      document.getElementById('step-files').style.display = 'none';
+    }
+    window.history.replaceState({}, '', '/');
+  }
+
+  function showLoggedIn(email) {
+    document.getElementById('btn-login').style.display = 'none';
+    document.getElementById('user-logged').style.display = 'flex';
+    document.getElementById('user-email').textContent = email;
+    document.getElementById('auth-gate').classList.remove('show');
+    document.getElementById('main-content').style.display = 'block';
+  }
+
+  function showLoggedOut() {
+    document.getElementById('btn-login').style.display = 'inline-flex';
+    document.getElementById('user-logged').style.display = 'none';
+    document.getElementById('auth-gate').classList.add('show');
+    document.getElementById('main-content').style.display = 'none';
+  }
+
+  function login() {
+    window.location.href = '/api/auth';
+  }
+
+  async function logout() {
+    await fetch('/api/auth/logout');
+    showLoggedOut();
+  }
+
+  // ---- FETCH FILES ----
+  async function fetchFiles() {
+    const folder = document.getElementById('folder-input').value.trim();
+    if (!folder) return showAlert('alert-fetch', 'Informe o link ou ID da pasta.');
+
+    const title = document.getElementById('sheet-title').value.trim();
+    if (!title) return showAlert('alert-fetch', 'Preencha o título da planilha primeiro (Passo 1).');
+
+    hideAlert('alert-fetch');
+    setLoading('btn-fetch', 'spinner-fetch', true);
+
+    try {
+      const res = await fetch(`/api/list-files?folder=${encodeURIComponent(folder)}`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (res.status === 401) { showLoggedOut(); return; }
+        return showAlert('alert-fetch', data.error || 'Erro ao buscar arquivos.');
+      }
+
+      fileData = data.files;
+      renderFilesTable(fileData);
+      document.getElementById('step-files').style.display = 'block';
+      document.getElementById('generate-section').style.display = 'flex';
+      updateRowsCount();
+    } catch (err) {
+      showAlert('alert-fetch', 'Erro de conexão: ' + err.message);
+    } finally {
+      setLoading('btn-fetch', 'spinner-fetch', false);
+    }
+  }
+
+  function renderFilesTable(files) {
+    const tbody = document.getElementById('files-tbody');
+    tbody.innerHTML = '';
+
+    files.forEach((file, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="color: var(--text-muted);">${i + 1}</td>
+        <td><div class="file-name" title="${escHtml(file.name)}">${escHtml(file.name)}</div></td>
+        <td><a class="file-link" href="${escHtml(file.link)}" target="_blank">↗ Ver</a></td>
+        <td>${typeBadge(file)}</td>
+        <td>
+          <select data-idx="${i}" data-field="pecaUp">
+            <option value="">— UP —</option>
+            <option value="top">top</option>
+            <option value="camiseta">camiseta</option>
+            <option value="camisa">camisa</option>
+            <option value="blusa">blusa</option>
+            <option value="casaco">casaco</option>
+            <option value="Original">Original</option>
+          </select>
+        </td>
+        <td>
+          <select data-idx="${i}" data-field="pecaDown">
+            <option value="">— Down —</option>
+            <option value="calça">calça</option>
+            <option value="shorts">shorts</option>
+            <option value="saia">saia</option>
+            <option value="bermuda">bermuda</option>
+            <option value="conjunto inferior">conjunto inferior</option>
+            <option value="Original">Original</option>
+          </select>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // Summary bar
+    const images = files.filter(f => f.isImage).length;
+    const pdfs = files.filter(f => f.isPdf).length;
+    const others = files.length - images - pdfs;
+    document.getElementById('summary-bar').innerHTML = `
+      <span>Total: <strong>${files.length} arquivos</strong></span>
+      ${images ? `<span>Imagens: <strong>${images}</strong></span>` : ''}
+      ${pdfs ? `<span>PDFs: <strong>${pdfs}</strong></span>` : ''}
+      ${others ? `<span>Outros: <strong>${others}</strong></span>` : ''}
+    `;
+  }
+
+  function typeBadge(file) {
+    if (file.isImage) return '<span class="badge badge-img">IMG</span>';
+    if (file.isPdf) return '<span class="badge badge-pdf">PDF</span>';
+    return '<span class="badge badge-other">—</span>';
+  }
+
+  function applyAll(field, value) {
+    if (!value) return;
+    document.querySelectorAll(`[data-field="${field}"]`).forEach(sel => {
+      sel.value = value;
+    });
+  }
+
+  function updateRowsCount() {
+    document.getElementById('rows-count').textContent = `${fileData.length} linhas serão criadas`;
+  }
+
+  // ---- GENERATE SHEET ----
+  async function generateSheet() {
+    const title = document.getElementById('sheet-title').value.trim();
+    if (!title) return showAlert('alert-gen', 'Preencha o título da planilha (Passo 1).');
+    if (!fileData.length) return showAlert('alert-gen', 'Nenhum arquivo carregado.');
+
+    hideAlert('alert-gen');
+    document.getElementById('result-box').classList.remove('show');
+    setLoading('btn-generate', 'spinner-gen', true);
+
+    // Build rows from table selects
+    const rows = fileData.map((file, i) => {
+      const pecaUp = document.querySelector(`[data-idx="${i}"][data-field="pecaUp"]`)?.value || '';
+      const pecaDown = document.querySelector(`[data-idx="${i}"][data-field="pecaDown"]`)?.value || '';
+      return {
+        codigoImg: file.name,
+        linkImg: file.link,
+        codigoCor: '',
+        linkCor: '',
+        pecaUp,
+        pecaDown
+      };
+    });
+
+    try {
+      const res = await fetch('/api/create-sheet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, rows })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (res.status === 401) { showLoggedOut(); return; }
+        return showAlert('alert-gen', data.error || 'Erro ao criar planilha.');
+      }
+
+      // Show result
+      document.getElementById('result-info').textContent = `"${title}" — ${data.rowsCreated} linhas preenchidas`;
+      document.getElementById('result-link').href = data.sheetUrl;
+      document.getElementById('result-box').classList.add('show');
+      document.getElementById('result-box').scrollIntoView({ behavior: 'smooth' });
+    } catch (err) {
+      showAlert('alert-gen', 'Erro de conexão: ' + err.message);
+    } finally {
+      setLoading('btn-generate', 'spinner-gen', false);
+    }
+  }
+
+  // ---- HELPERS ----
+  function showAlert(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+
+  function hideAlert(id) {
+    document.getElementById(id).classList.remove('show');
+  }
+
+  function setLoading(btnId, spinnerId, loading) {
+    document.getElementById(btnId).disabled = loading;
+    const sp = document.getElementById(spinnerId);
+    if (loading) sp.classList.add('show'); else sp.classList.remove('show');
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ---- INIT ----
+  checkAuth();
+</script>
+</body>
+</html>
