@@ -413,6 +413,130 @@
       width: 18px;
       height: 18px;
     }
+
+    /* COLOR CATALOG */
+    .catalog-section {
+      margin-top: 48px;
+      border-top: 1px solid var(--border);
+      padding-top: 40px;
+    }
+
+    .catalog-section h2 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .catalog-subtitle {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+
+    .catalog-controls {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .catalog-search {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 14px;
+      margin-top: 12px;
+    }
+
+    .color-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.15s;
+      cursor: default;
+    }
+
+    .color-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .color-thumb {
+      width: 100%;
+      height: 100px;
+      object-fit: cover;
+      background: var(--bg);
+      display: block;
+    }
+
+    .color-thumb-placeholder {
+      width: 100%;
+      height: 100px;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .color-info {
+      padding: 10px 12px;
+    }
+
+    .color-cod {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 3px;
+      font-family: monospace;
+    }
+
+    .color-name {
+      font-size: 12px;
+      color: var(--text);
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .color-ref {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .color-link {
+      display: block;
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .color-link:hover { text-decoration: underline; }
+
+    .catalog-count {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .catalog-empty {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+      font-size: 14px;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -570,6 +694,27 @@
     </div>
 
     <div class="alert alert-error" id="alert-gen"></div>
+
+    <!-- COLOR CATALOG -->
+    <div class="catalog-section" id="catalog-section">
+      <h2>Color Catalog</h2>
+      <p class="catalog-subtitle">Consulte as 30 cores cadastradas com tecidos e referências.</p>
+
+      <div class="catalog-controls">
+        <input type="text" class="catalog-search" id="catalog-search" placeholder="Buscar por código, nome ou referência..." oninput="filterColors()" />
+        <button class="btn btn-secondary" id="btn-load-catalog" onclick="loadColorCatalog()">
+          <div class="spinner" id="spinner-catalog"></div>
+          Carregar Cores
+        </button>
+        <span class="catalog-count" id="catalog-count"></span>
+      </div>
+
+      <div class="alert alert-error" id="alert-catalog"></div>
+      <div class="alert alert-info" id="info-catalog"></div>
+
+      <div class="color-grid" id="color-grid"></div>
+      <div class="catalog-empty" id="catalog-empty">Nenhuma cor encontrada para essa busca.</div>
+    </div>
   </div>
 </main>
 
@@ -789,6 +934,81 @@
 
   function escHtml(str) {
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ---- COLOR CATALOG ----
+  let allColors = [];
+
+  async function loadColorCatalog() {
+    hideAlert('alert-catalog');
+    document.getElementById('info-catalog').classList.remove('show');
+    setLoading('btn-load-catalog', 'spinner-catalog', true);
+    document.getElementById('catalog-count').textContent = '';
+
+    try {
+      const res = await fetch('/api/color-catalog');
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (res.status === 401) { showLoggedOut(); return; }
+        return showAlert('alert-catalog', data.error || 'Erro ao carregar Color Catalog.');
+      }
+
+      allColors = data.colors;
+      renderColors(allColors);
+      document.getElementById('catalog-count').textContent = `${data.total} cores carregadas`;
+    } catch (err) {
+      showAlert('alert-catalog', 'Erro de conexão: ' + err.message);
+    } finally {
+      setLoading('btn-load-catalog', 'spinner-catalog', false);
+    }
+  }
+
+  function filterColors() {
+    const q = document.getElementById('catalog-search').value.toLowerCase().trim();
+    if (!allColors.length) return;
+    const filtered = q
+      ? allColors.filter(c =>
+          c.codCor.toLowerCase().includes(q) ||
+          c.nomeOriginal.toLowerCase().includes(q) ||
+          c.referencia.toLowerCase().includes(q) ||
+          c.num.includes(q)
+        )
+      : allColors;
+    renderColors(filtered);
+    document.getElementById('catalog-count').textContent = `${filtered.length} de ${allColors.length} cores`;
+  }
+
+  function renderColors(colors) {
+    const grid = document.getElementById('color-grid');
+    const empty = document.getElementById('catalog-empty');
+    grid.innerHTML = '';
+
+    if (!colors.length) {
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+
+    colors.forEach(c => {
+      const card = document.createElement('div');
+      card.className = 'color-card';
+
+      const thumb = c.thumbImg
+        ? `<img class="color-thumb" src="${escHtml(c.thumbImg)}" alt="${escHtml(c.codCor)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><div class="color-thumb-placeholder" style="display:none;">Sem imagem</div>`
+        : `<div class="color-thumb-placeholder">Sem imagem</div>`;
+
+      card.innerHTML = `
+        ${thumb}
+        <div class="color-info">
+          <div class="color-cod">${escHtml(c.codCor || '—')}</div>
+          <div class="color-name" title="${escHtml(c.nomeOriginal)}">${escHtml(c.nomeOriginal || '—')}</div>
+          <div class="color-ref" title="${escHtml(c.referencia)}">${escHtml(c.referencia || '—')}</div>
+          ${c.linkCor ? `<a class="color-link" href="${escHtml(c.linkCor)}" target="_blank">↗ Ver cor</a>` : ''}
+        </div>
+      `;
+      grid.appendChild(card);
+    });
   }
 
   // ---- INIT ----
